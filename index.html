@@ -47,32 +47,32 @@
     .login-hidden { display: none !important; }
     .login-card {
       width: 100%;
-      max-width: 400px;
+      max-width: 390px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 24px 20px;
+      padding: 26px 20px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     }
-    .login-card h2 { color: var(--accent); font-size: 1.3rem; margin-bottom: 4px; }
-    .login-card p { color: var(--muted); font-size: 0.78rem; margin-bottom: 18px; }
-    .form-group { margin-bottom: 13px; }
+    .login-card h2 { color: var(--accent); font-size: 1.35rem; margin-bottom: 4px; }
+    .login-card p { color: var(--muted); font-size: 0.78rem; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
     .form-group label {
       display: block;
       font-size: 0.72rem;
       color: var(--muted);
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       font-weight: 700;
       text-transform: uppercase;
     }
     .form-input {
       width: 100%;
-      padding: 12px;
+      padding: 12px 14px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--bg);
       color: var(--text);
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       outline: none;
     }
     .form-input:focus { border-color: var(--accent); }
@@ -88,7 +88,8 @@
       cursor: pointer;
       margin-top: 6px;
     }
-    .login-err { color: var(--red); font-size: 0.8rem; margin-top: 10px; text-align: center; min-height: 18px; }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .login-err { color: var(--red); font-size: 0.8rem; margin-top: 12px; text-align: center; min-height: 18px; }
 
     /* TOP APP BAR WITH HAMBURGER */
     .topbar {
@@ -385,26 +386,22 @@
 </head>
 <body>
 
-  <!-- LOGIN SCREEN (Reads Username, Password & Dates from 'Settings' Tab in Google Sheet) -->
+  <!-- CLEAN LOGIN SCREEN (Only Username & Password) -->
   <div class="login-overlay" id="loginOverlay">
-    <div class="login-card">
+    <form class="login-card" onsubmit="event.preventDefault(); handleLogin();">
       <h2>UPSC 2027 • Cloud Login</h2>
-      <p>Credentials & Countdown Dates synced from Google Sheet (<code>Settings</code> tab)</p>
+      <p>NIT Manipur • CSE 2027 Command Tracker</p>
       <div class="form-group">
-        <label>Google Apps Script Web App URL</label>
-        <input type="url" id="loginScriptUrl" class="form-input" placeholder="https://script.google.com/macros/s/AKfycbxwoqtADeof5BaXifM816GL6v5EmqVOGcqWBDmxwAxmaSQeXEa5bi3vtFzDix5FwZvA/exec" />
+        <label>Username</label>
+        <input type="text" id="loginUser" class="form-input" placeholder="Enter Username" autocomplete="username" required />
       </div>
       <div class="form-group">
-        <label>Username (from Google Sheet)</label>
-        <input type="text" id="loginUser" class="form-input" placeholder="sashikanta" />
+        <label>Password</label>
+        <input type="password" id="loginPass" class="form-input" placeholder="Enter Password" autocomplete="current-password" required />
       </div>
-      <div class="form-group">
-        <label>Password (from Google Sheet)</label>
-        <input type="password" id="loginPass" class="form-input" placeholder="••••••••" />
-      </div>
-      <button class="btn-primary" id="loginBtn" onclick="handleLogin()">Sign In & Pull Sheet Data</button>
+      <button type="submit" class="btn-primary" id="loginBtn">Sign In</button>
       <div class="login-err" id="loginErr"></div>
-    </div>
+    </form>
   </div>
 
   <!-- SLIDE-OUT HAMBURGER DRAWER -->
@@ -437,7 +434,7 @@
     <div class="sync-pill" id="syncBadge" onclick="syncFromCloud()">🔄 Sync Sheet</div>
   </header>
 
-  <!-- 4-COUNTDOWN RIBBON (100% Driven by 'Settings' Tab in Google Sheet) -->
+  <!-- 4-COUNTDOWN RIBBON (Pulled Strictly from Google Sheet 'Settings' Tab) -->
   <section class="countdown-grid">
     <div class="cd-card cd-target">
       <span class="cd-days" id="cdTargetDays">--</span>
@@ -579,7 +576,7 @@
       <div class="analytics-card">
         <h3>Google Sheet <code>Settings</code> Tab</h3>
         <p style="font-size: 0.75rem; color: var(--muted); margin-bottom: 14px;">
-          You can change these values directly inside the <strong>Settings</strong> tab of your Google Sheet, or edit them below and tap Save to update the Google Sheet automatically.
+          These values are synced directly with the <strong>Settings</strong> tab in your Google Sheet. Change them here or directly inside Google Sheets anytime.
         </p>
         <div class="form-group">
           <label>Username (Col A in Settings Sheet)</label>
@@ -616,8 +613,8 @@
   </main>
 
   <script>
-    // Optional: Paste your deployed Google Apps Script Web App URL here so it's pre-filled on new devices
-    const DEFAULT_SCRIPT_URL = "";
+    // HARDCODED GOOGLE APPS SCRIPT WEB APP URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwoqtADeof5BaXifM816GL6v5EmqVOGcqWBDmxwAxmaSQeXEa5bi3vtFzDix5FwZvA/exec";
 
     const SCHEDULES = {
       weekday: [
@@ -654,12 +651,11 @@
       ]
     };
 
-    const LS_LOGS = 'upsc2027_sheet_logs_v3';
-    const LS_CFG  = 'upsc2027_sheet_cfg_v3';
-    const LS_AUTH = 'upsc2027_sheet_auth_v3';
+    const LS_LOGS = 'upsc2027_sheet_logs_v4';
+    const LS_CFG  = 'upsc2027_sheet_cfg_v4';
+    const LS_AUTH = 'upsc2027_sheet_auth_v4';
 
     let db = JSON.parse(localStorage.getItem(LS_LOGS) || '{}');
-    // Dates start empty until pulled from Google Sheet Settings tab
     let configDates = JSON.parse(localStorage.getItem(LS_CFG) || JSON.stringify({
       target_date: '',
       notification_date: '',
@@ -705,12 +701,12 @@
     }
 
     async function apiPost(payload) {
-      if (!auth || !auth.scriptUrl) throw new Error('Missing Script URL');
+      if (!auth || !auth.username || !auth.password) throw new Error('Not logged in');
       const bodyObj = Object.assign({}, payload, {
         username: auth.username,
         password: auth.password
       });
-      const res = await fetch(auth.scriptUrl, {
+      const res = await fetch(SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(bodyObj),
@@ -720,28 +716,27 @@
     }
 
     async function handleLogin() {
-      const scriptUrl = (document.getElementById('loginScriptUrl').value || DEFAULT_SCRIPT_URL).trim();
       const username = document.getElementById('loginUser').value.trim();
       const password = document.getElementById('loginPass').value.trim();
       const errEl = document.getElementById('loginErr');
       const btn = document.getElementById('loginBtn');
 
-      if (!scriptUrl || !username || !password) {
-        errEl.textContent = 'Please enter Web App URL, Username, and Password.';
+      if (!username || !password) {
+        errEl.textContent = 'Please enter both Username and Password.';
         return;
       }
 
       errEl.textContent = '';
-      btn.textContent = 'Reading Settings Sheet...';
+      btn.textContent = 'Signing in...';
       btn.disabled = true;
 
       try {
-        auth = { scriptUrl, username, password };
+        auth = { username, password };
         const data = await apiPost({ action: 'loginAndPull' });
         if (!data.ok) {
           auth = null;
-          errEl.textContent = data.error || 'Login failed.';
-          btn.textContent = 'Sign In & Pull Sheet Data';
+          errEl.textContent = data.error || 'Invalid Username or Password.';
+          btn.textContent = 'Sign In';
           btn.disabled = false;
           return;
         }
@@ -766,9 +761,9 @@
         renderAll();
       } catch (e) {
         auth = null;
-        errEl.textContent = 'Connection error. Check Web App URL & "Anyone" access.';
+        errEl.textContent = 'Connection error. Ensure your Apps Script deployment is set to "Anyone".';
       } finally {
-        btn.textContent = 'Sign In & Pull Sheet Data';
+        btn.textContent = 'Sign In';
         btn.disabled = false;
       }
     }
@@ -795,7 +790,7 @@
           renderAll();
           setSyncStatus('☁️ Synced', 'var(--green)');
         } else {
-          setSyncStatus('⚠️ Password Changed', 'var(--red)');
+          setSyncStatus('⚠️ Session Expired', 'var(--red)');
           logout();
         }
       } catch (e) {
@@ -884,7 +879,6 @@
       document.getElementById('cdMainsDays').textContent = daysUntil(configDates.mains_date);
       document.getElementById('cdMainsDate').textContent = configDates.mains_date || 'Not Set';
 
-      // Populate Settings form with current Sheet values
       if (auth) {
         document.getElementById('cfgUsername').value = auth.username || '';
         document.getElementById('cfgPassword').value = auth.password || '';
@@ -1154,11 +1148,7 @@
       saveAndPushCurrentDay();
     });
 
-    if (DEFAULT_SCRIPT_URL) {
-      document.getElementById('loginScriptUrl').value = DEFAULT_SCRIPT_URL;
-    }
-
-    if (auth && auth.scriptUrl && auth.username && auth.password) {
+    if (auth && auth.username && auth.password) {
       document.getElementById('loginOverlay').classList.add('login-hidden');
       document.getElementById('drawerUserTitle').textContent = auth.displayName || auth.username;
       renderCountdownsAndSettingsForm();
