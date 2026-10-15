@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b0f19" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+  <title>UPSC 2027 Cloud Command</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #131b2e;
+      --card: #182238;
+      --border: #263452;
+      --accent: #38bdf8;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --purple: #a855f7;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 520px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    /* LOGIN SCREEN */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-hidden { display: none !important; }
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .login-card h2 { color: var(--accent); font-size: 1.3rem; margin-bottom: 4px; }
+    .login-card p { color: var(--muted); font-size: 0.78rem; margin-bottom: 18px; }
+    .form-group { margin-bottom: 13px; }
+    .form-group label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #0284c7, #2563eb);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .login-err { color: var(--red); font-size: 0.8rem; margin-top: 10px; text-align: center; min-height: 18px; }
+
+    /* TOP APP BAR WITH HAMBURGER */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      background: rgba(11, 15, 25, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .hamburger-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .hamburger-btn span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .app-brand h1 { font-size: 1rem; font-weight: 800; color: var(--text); }
+    .app-brand small { font-size: 0.7rem; color: var(--muted); display: block; }
+    .sync-pill {
+      font-size: 0.72rem;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      cursor: pointer;
+    }
+
+    /* SLIDE-OUT HAMBURGER DRAWER */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 1200;
+      display: none;
+    }
+    .drawer-backdrop.open { display: block; }
+    .drawer {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 280px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      z-index: 1300;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 14px;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-header {
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .drawer-header h3 { color: var(--accent); font-size: 1.05rem; }
+    .drawer-header p { color: var(--muted); font-size: 0.75rem; margin-top: 3px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      cursor: pointer;
+    }
+    .nav-item.active {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .drawer-footer {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* 4-COUNTDOWN RIBBON AT TOP (Strict Google Sheet Values) */
+    .countdown-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+      padding: 12px 14px 4px 14px;
+    }
+    .cd-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 5px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cd-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .cd-target::before { background: var(--purple); }
+    .cd-notif::before { background: var(--accent); }
+    .cd-prelims::before { background: var(--amber); }
+    .cd-mains::before { background: var(--green); }
+    .cd-days { font-size: 1.12rem; font-weight: 800; display: block; line-height: 1.1; margin-top: 2px; }
+    .cd-label { font-size: 0.62rem; color: var(--muted); font-weight: 700; text-transform: uppercase; display: block; margin-top: 3px; }
+    .cd-date { font-size: 0.57rem; color: #64748b; display: block; margin-top: 1px; }
+
+    /* MAIN CONTAINER */
+    .container { padding: 10px 14px; }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    .controls-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .date-input, .mode-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      outline: none;
+    }
+    .date-input { flex: 1; }
+    .mode-select { flex: 1.35; color: var(--accent); }
+
+    .summary-card {
+      background: linear-gradient(145deg, #17223b, #111829);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .summary-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+    .hours-big { font-size: 1.6rem; font-weight: 800; color: var(--green); }
+    .hours-target { font-size: 0.82rem; color: var(--muted); }
+    .score-pill {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+    }
+    .progress-track { width: 100%; height: 9px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); width: 0%; transition: width 0.25s ease; }
+    .lifetime-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .stat-box span { display: block; font-size: 0.98rem; font-weight: 800; }
+    .stat-box small { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; }
+
+    .protocol-banner {
+      background: rgba(168, 85, 247, 0.12);
+      border-left: 3px solid var(--purple);
+      padding: 8px 11px;
+      border-radius: 8px;
+      font-size: 0.73rem;
+      color: #e9d5ff;
+      margin-bottom: 12px;
+      line-height: 1.35;
+    }
+
+    .section-title {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin: 14px 0 8px 2px;
+      font-weight: 700;
+    }
+
+    .counter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .counter-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .counter-card h4 { font-size: 0.68rem; color: var(--muted); margin-bottom: 6px; }
+    .counter-controls { display: flex; align-items: center; justify-content: space-between; }
+    .btn-step {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .counter-val { font-size: 1.05rem; font-weight: 800; color: var(--accent); }
+
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      cursor: pointer;
+    }
+    .task-item.done { border-color: rgba(34, 197, 94, 0.5); background: rgba(19, 27, 46, 0.55); }
+    .task-item.done .task-title { text-decoration: line-through; color: var(--muted); }
+    .checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-size: 0.85rem;
+      font-weight: 900;
+    }
+    .task-item.done .checkbox { background: var(--green); border-color: var(--green); color: #052e16; }
+    .task-content { flex: 1; }
+    .task-meta { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--accent); font-weight: 600; margin-bottom: 3px; }
+    .tag-habit { color: var(--amber) !important; }
+    .task-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
+    .task-desc { font-size: 0.73rem; color: var(--muted); line-height: 1.3; }
+
+    .analytics-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .analytics-card h3 { font-size: 0.95rem; color: var(--accent); margin-bottom: 10px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+    .kpi-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+    .kpi-box big { display: block; font-size: 1.25rem; font-weight: 800; color: var(--text); }
+    .kpi-box span { font-size: 0.7rem; color: var(--muted); }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+    .data-table th, .data-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: left; }
+    .data-table th { color: var(--muted); font-weight: 700; text-transform: uppercase; font-size: 0.66rem; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cal-cell small { font-size: 0.55rem; color: var(--muted); font-weight: 500; }
+    .heat-high { background: rgba(34, 197, 94, 0.28); border-color: var(--green); }
+    .heat-mid { background: rgba(56, 189, 248, 0.22); border-color: var(--accent); }
+    .heat-low { background: rgba(245, 158, 11, 0.22); border-color: var(--amber); }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN (Reads Username, Password & Dates from 'Settings' Tab in Google Sheet) -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+      <h2>UPSC 2027 • Cloud Login</h2>
+      <p>Credentials & Countdown Dates synced from Google Sheet (<code>Settings</code> tab)</p>
+      <div class="form-group">
+        <label>Google Apps Script Web App URL</label>
+        <input type="url" id="loginScriptUrl" class="form-input" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+      <div class="form-group">
+        <label>Username (from Google Sheet)</label>
+        <input type="text" id="loginUser" class="form-input" placeholder="sashikanta" />
+      </div>
+      <div class="form-group">
+        <label>Password (from Google Sheet)</label>
+        <input type="password" id="loginPass" class="form-input" placeholder="••••••••" />
+      </div>
+      <button class="btn-primary" id="loginBtn" onclick="handleLogin()">Sign In & Pull Sheet Data</button>
+      <div class="login-err" id="loginErr"></div>
+    </div>
+  </div>
+
+  <!-- SLIDE-OUT HAMBURGER DRAWER -->
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header">
+      <h3 id="drawerUserTitle">Aspirant</h3>
+      <p>NIT Manipur • CSE 2027 Top 100</p>
+    </div>
+    <div class="nav-item active" id="nav-daily" onclick="switchView('daily')">📅 Daily Command Tracker</div>
+    <div class="nav-item" id="nav-weekly" onclick="switchView('weekly')">📊 Weekly Progress</div>
+    <div class="nav-item" id="nav-monthly" onclick="switchView('monthly')">🗓️ Monthly Progress</div>
+    <div class="nav-item" id="nav-settings" onclick="switchView('settings')">⚙️ Sheet Credentials & Dates</div>
+    <div class="drawer-footer">
+      <div class="nav-item" style="color: var(--red);" onclick="logout()">🔒 Logout</div>
+    </div>
+  </aside>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger-btn" onclick="toggleDrawer(true)" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="app-brand">
+        <h1 id="viewHeaderTitle">Daily Command</h1>
+        <small id="streakText">🔥 0d Streak</small>
+      </div>
+    </div>
+    <div class="sync-pill" id="syncBadge" onclick="syncFromCloud()">🔄 Sync Sheet</div>
+  </header>
+
+  <!-- 4-COUNTDOWN RIBBON (100% Driven by 'Settings' Tab in Google Sheet) -->
+  <section class="countdown-grid">
+    <div class="cd-card cd-target">
+      <span class="cd-days" id="cdTargetDays">--</span>
+      <span class="cd-label">Geo P2 Target</span>
+      <span class="cd-date" id="cdTargetDate">From Sheet</span>
+    </div>
+    <div class="cd-card cd-notif">
+      <span class="cd-days" id="cdNotifDays">--</span>
+      <span class="cd-label">Notification</span>
+      <span class="cd-date" id="cdNotifDate">From Sheet</span>
+    </div>
+    <div class="cd-card cd-prelims">
+      <span class="cd-days" id="cdPrelimsDays">--</span>
+      <span class="cd-label">Prelims</span>
+      <span class="cd-date" id="cdPrelimsDate">From Sheet</span>
+    </div>
+    <div class="cd-card cd-mains">
+      <span class="cd-days" id="cdMainsDays">--</span>
+      <span class="cd-label">Mains</span>
+      <span class="cd-date" id="cdMainsDate">From Sheet</span>
+    </div>
+  </section>
+
+  <!-- MAIN VIEWS -->
+  <main class="container">
+
+    <!-- VIEW 1: DAILY TRACKER -->
+    <section class="view-section active" id="view-daily">
+      <div class="controls-bar">
+        <input type="date" id="datePicker" class="date-input" />
+        <select id="modeSelect" class="mode-select">
+          <option value="weekday">Weekday (7.25h + NIT)</option>
+          <option value="marathon">Card A: 10h Marathon</option>
+          <option value="mvd">⚡ Emergency MVD (1.5h)</option>
+          <option value="recovery">Card B: Recovery Day</option>
+        </select>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-top">
+          <div>
+            <span class="hours-big" id="hoursDone">0.0</span>
+            <span class="hours-target" id="hoursTarget">/ 7.25 hrs studied</span>
+          </div>
+          <div class="score-pill" id="scorePercent">0% Done</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressBar"></div>
+        </div>
+        <div class="lifetime-grid">
+          <div class="stat-box"><span id="totHours">0</span><small>Total Hrs</small></div>
+          <div class="stat-box"><span id="totMains">0</span><small>Mains Qs</small></div>
+          <div class="stat-box"><span id="totPYQ">0</span><small>Prelims PYQ</small></div>
+          <div class="stat-box"><span id="totRides">0</span><small>Cradiac Rides</small></div>
+        </div>
+      </div>
+
+      <div class="protocol-banner">
+        <strong>4:15 AM Friction Protocol:</strong> Keep phone outside bedroom until 6:30 AM. Tick Block 1 & Block 2 together at 7:00 AM!
+      </div>
+
+      <div class="section-title">Daily Output Log</div>
+      <div class="counter-grid">
+        <div class="counter-card">
+          <h4>Mains Qs (Target: 2)</h4>
+          <div class="counter-controls">
+            <button class="btn-step" onclick="updateCounter('mains', -1)">-</button>
+            <span class="counter-val" id="val-mains">0</span>
+            <button class="btn-step" onclick="updateCounter('mains', 1)">+</button>
+          </div>
+        </div>
+        <div class="counter-card">
+          <h4>Prelims PYQs (25)</h4>
+          <div class="counter-controls">
+            <button class="btn-step" onclick="updateCounter('pyq', -5)">-</button>
+            <span class="counter-val" id="val-pyq">0</span>
+            <button class="btn-step" onclick="updateCounter('pyq', 5)">+</button>
+          </div>
+        </div>
+        <div class="counter-card">
+          <h4>CSAT Qs (15)</h4>
+          <div class="counter-controls">
+            <button class="btn-step" onclick="updateCounter('csat', -5)">-</button>
+            <span class="counter-val" id="val-csat">0</span>
+            <button class="btn-step" onclick="updateCounter('csat', 5)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Study Blocks & Daily Anchors</div>
+      <div class="task-list" id="taskList"></div>
+    </section>
+
+    <!-- VIEW 2: WEEKLY PROGRESS -->
+    <section class="view-section" id="view-weekly">
+      <div class="analytics-card">
+        <h3>Last 7 Days Summary</h3>
+        <div class="kpi-grid">
+          <div class="kpi-box"><big id="wkHours">0.0h</big><span>Study Hours (7d)</span></div>
+          <div class="kpi-box"><big id="wkAvgPct">0%</big><span>Avg Block Completion</span></div>
+          <div class="kpi-box"><big id="wkMains">0</big><span>Mains Answers Written</span></div>
+          <div class="kpi-box"><big id="wkPYQ">0 / 0</big><span>Prelims PYQs / CSAT Qs</span></div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Mode</th>
+              <th>Hours</th>
+              <th>Score</th>
+              <th>M/P/C</th>
+            </tr>
+          </thead>
+          <tbody id="weeklyTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VIEW 3: MONTHLY PROGRESS -->
+    <section class="view-section" id="view-monthly">
+      <div class="controls-bar">
+        <input type="month" id="monthPicker" class="date-input" onchange="renderMonthlyView()" />
+      </div>
+      <div class="analytics-card">
+        <h3>Monthly Consistency & Output</h3>
+        <div class="kpi-grid">
+          <div class="kpi-box"><big id="moHours">0.0h</big><span>Monthly Study Hours</span></div>
+          <div class="kpi-box"><big id="moActiveDays">0d</big><span>Active Days Logged</span></div>
+          <div class="kpi-box"><big id="moMains">0</big><span>Monthly Mains Qs</span></div>
+          <div class="kpi-box"><big id="moRides">0</big><span>Cradiac Alpha Rides</span></div>
+        </div>
+        <div class="section-title">Daily Heatmap (Tap any date to inspect)</div>
+        <div class="cal-grid" id="monthCalGrid"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: GOOGLE SHEET 'SETTINGS' TAB EDITOR (Username, Password & 4 Dates) -->
+    <section class="view-section" id="view-settings">
+      <div class="analytics-card">
+        <h3>Google Sheet <code>Settings</code> Tab</h3>
+        <p style="font-size: 0.75rem; color: var(--muted); margin-bottom: 14px;">
+          You can change these values directly inside the <strong>Settings</strong> tab of your Google Sheet, or edit them below and tap Save to update the Google Sheet automatically.
+        </p>
+        <div class="form-group">
+          <label>Username (Col A in Settings Sheet)</label>
+          <input type="text" id="cfgUsername" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Password (Col B in Settings Sheet)</label>
+          <input type="text" id="cfgPassword" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Display Name (Col C in Settings Sheet)</label>
+          <input type="text" id="cfgDisplayName" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Geo Paper 2 Target Date (Col D in Settings Sheet)</label>
+          <input type="date" id="cfgTargetDate" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>UPSC Notification Date (Col E in Settings Sheet)</label>
+          <input type="date" id="cfgNotifDate" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>UPSC Prelims Date (Col F in Settings Sheet)</label>
+          <input type="date" id="cfgPrelimsDate" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>UPSC Mains Date (Col G in Settings Sheet)</label>
+          <input type="date" id="cfgMainsDate" class="form-input" />
+        </div>
+        <button class="btn-primary" onclick="saveSettingsToSheet()">Save Credentials & Dates to Google Sheet</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Optional: Paste your deployed Google Apps Script Web App URL here so it's pre-filled on new devices
+    const DEFAULT_SCRIPT_URL = "";
+
+    const SCHEDULES = {
+      weekday: [
+        { id: 'w_b1', time: '04:30 – 06:30 AM', title: 'Block 1: Geography Optional P2', hrs: 2.0, desc: '100% Offline. Maps + Regional case studies. Zero phone.', type: 'study' },
+        { id: 'w_b2', time: '06:30 – 07:00 AM', title: 'Block 2: 2 Mains Answers', hrs: 0.5, desc: '22m writing + 8m review (M/W/F: GS | T/Th: Geo).', type: 'study' },
+        { id: 'w_b3', time: '07:00 – 08:30 AM', title: 'Block 3: GS Mains Revision', hrs: 1.5, desc: 'Revise Manipur PSC Mains notes + data/judgments.', type: 'study' },
+        { id: 'w_h1', time: '10:00 – 10:25 AM', title: 'Anchor: NIT Desk Power Nap', hrs: 0, desc: '25-min strict alarm at NIT cabin/desk.', type: 'habit' },
+        { id: 'w_b4', time: '02:30 – 03:30 PM', title: 'Block 4: NIT Pocket (Current Affairs)', hrs: 1.0, desc: '60m CA before leaving NIT. Last coffee cut-off!', type: 'study' },
+        { id: 'w_h2', time: '04:30 – 05:30 PM', title: 'Anchor: Cradiac Alpha Pro + Bath', hrs: 0, desc: '35-40m ride + bath. Prevents the 8:30 PM bed crash.', type: 'ride' },
+        { id: 'w_b5', time: '05:45 – 06:30 PM', title: 'Block 5: CSAT Quant & Logic Sprint', hrs: 0.75, desc: '15m formulas + 30m timed PYQ solving.', type: 'study' },
+        { id: 'w_b6', time: '06:30 – 07:30 PM', title: 'Block 6: Prelims PYQ Reverse-Engg', hrs: 1.0, desc: '30m 25 PYQs + 30m option elimination analysis.', type: 'study' },
+        { id: 'w_b7', time: '08:30 – 09:00 PM', title: 'Block 7: Active Recall & Tables', hrs: 0.5, desc: 'Recall morning topics + Prelims factual tables.', type: 'study' },
+        { id: 'w_h3', time: '10:15 PM', title: 'Anchor: Desk Prep & Lights Out', hrs: 0, desc: 'Lay out 4:15 AM books. Phone outside bedroom.', type: 'habit' }
+      ],
+      marathon: [
+        { id: 'm_b1', time: '04:30 – 07:30 AM', title: 'Marathon 1: Geo Optional P2 Deep Dive', hrs: 3.0, desc: 'Finish major thematic unit + India maps.', type: 'study' },
+        { id: 'm_b2', time: '08:30 – 10:30 AM', title: 'Marathon 2: Full Prelims / CSAT Mock', hrs: 2.0, desc: 'Exact UPSC morning exam clock simulation.', type: 'study' },
+        { id: 'm_b3', time: '10:30 – 12:00 PM', title: 'Marathon 3: Mock Post-Mortem', hrs: 1.5, desc: 'Log elimination mistakes & weak static areas.', type: 'study' },
+        { id: 'm_h1', time: '01:30 – 03:30 PM', title: 'Anchor: Weekend Noon Sleep (2h)', hrs: 0, desc: 'Hard wake-up wall at 3:30 PM! Cold water + last coffee.', type: 'habit' },
+        { id: 'm_b4', time: '04:00 – 06:00 PM', title: 'Marathon 4: Essay / 5-Q Mains Test', hrs: 2.0, desc: 'Fresh post-nap brain: Full Essay or 5 Mains Qs.', type: 'study' },
+        { id: 'm_b5', time: '07:00 – 08:30 PM', title: 'Marathon 5: Weekly Consolidation', hrs: 1.5, desc: 'Clear weekday CA spillover & Prelims tables.', type: 'study' },
+        { id: 'm_h2', time: '10:15 PM', title: 'Anchor: Prep Monday Desk & Sleep', hrs: 0, desc: 'Protect Monday 4:15 AM wake-up.', type: 'habit' }
+      ],
+      mvd: [
+        { id: 'e_b1', time: '30 Mins', title: 'MVD 1: CSAT Sprint (10 Qs)', hrs: 0.5, desc: 'Non-negotiable minimum to keep streak alive.', type: 'study' },
+        { id: 'e_b2', time: '30 Mins', title: 'MVD 2: Prelims PYQs (15 Qs)', hrs: 0.5, desc: 'Solve + review options.', type: 'study' },
+        { id: 'e_b3', time: '30 Mins', title: 'MVD 3: 2 Mains Answers OR Geo P2', hrs: 0.5, desc: 'Never hit a 0-hour day.', type: 'study' }
+      ],
+      recovery: [
+        { id: 'r_h1', time: 'All Day', title: '100% Book-Free & PhD-Free Recharge', hrs: 0, desc: 'Spend time with partner/family. Zero guilt.', type: 'habit' },
+        { id: 'r_h2', time: 'Afternoon', title: 'Weekend Noon Nap (Wake by 3:30 PM)', hrs: 0, desc: 'Clear weekday sleep debt.', type: 'habit' },
+        { id: 'r_h3', time: 'Evening', title: 'Easy Cradiac Spin / Walk', hrs: 0, desc: 'Active physical recovery.', type: 'ride' },
+        { id: 'r_h4', time: '10:30 PM', title: 'Lights Out on Time', hrs: 0, desc: 'Keep 4:15 AM circadian rhythm intact.', type: 'habit' }
+      ]
+    };
+
+    const LS_LOGS = 'upsc2027_sheet_logs_v3';
+    const LS_CFG  = 'upsc2027_sheet_cfg_v3';
+    const LS_AUTH = 'upsc2027_sheet_auth_v3';
+
+    let db = JSON.parse(localStorage.getItem(LS_LOGS) || '{}');
+    // Dates start empty until pulled from Google Sheet Settings tab
+    let configDates = JSON.parse(localStorage.getItem(LS_CFG) || JSON.stringify({
+      target_date: '',
+      notification_date: '',
+      prelims_date: '',
+      mains_date: ''
+    }));
+    let auth = JSON.parse(localStorage.getItem(LS_AUTH) || 'null');
+
+    const datePicker = document.getElementById('datePicker');
+    const modeSelect = document.getElementById('modeSelect');
+
+    function getTodayStr() {
+      const d = new Date();
+      const offset = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - offset).toISOString().split('T')[0];
+    }
+
+    function defaultModeForDate(dateStr) {
+      const day = new Date(dateStr + 'T00:00:00').getDay();
+      if (day === 0) return 'marathon';
+      if (day === 6) return 'recovery';
+      return 'weekday';
+    }
+
+    function ensureDateRecord(dateStr) {
+      if (!db[dateStr]) {
+        db[dateStr] = {
+          mode: defaultModeForDate(dateStr),
+          checked: {},
+          counters: { mains: 0, pyq: 0, csat: 0 },
+          studyHours: 0,
+          completionPct: 0,
+          ride: false
+        };
+      }
+      return db[dateStr];
+    }
+
+    function setSyncStatus(text, color) {
+      const el = document.getElementById('syncBadge');
+      el.textContent = text;
+      el.style.color = color || 'var(--accent)';
+    }
+
+    async function apiPost(payload) {
+      if (!auth || !auth.scriptUrl) throw new Error('Missing Script URL');
+      const bodyObj = Object.assign({}, payload, {
+        username: auth.username,
+        password: auth.password
+      });
+      const res = await fetch(auth.scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(bodyObj),
+        redirect: 'follow'
+      });
+      return await res.json();
+    }
+
+    async function handleLogin() {
+      const scriptUrl = (document.getElementById('loginScriptUrl').value || DEFAULT_SCRIPT_URL).trim();
+      const username = document.getElementById('loginUser').value.trim();
+      const password = document.getElementById('loginPass').value.trim();
+      const errEl = document.getElementById('loginErr');
+      const btn = document.getElementById('loginBtn');
+
+      if (!scriptUrl || !username || !password) {
+        errEl.textContent = 'Please enter Web App URL, Username, and Password.';
+        return;
+      }
+
+      errEl.textContent = '';
+      btn.textContent = 'Reading Settings Sheet...';
+      btn.disabled = true;
+
+      try {
+        auth = { scriptUrl, username, password };
+        const data = await apiPost({ action: 'loginAndPull' });
+        if (!data.ok) {
+          auth = null;
+          errEl.textContent = data.error || 'Login failed.';
+          btn.textContent = 'Sign In & Pull Sheet Data';
+          btn.disabled = false;
+          return;
+        }
+
+        auth.username = data.user.username;
+        auth.displayName = data.user.displayName || data.user.username;
+        localStorage.setItem(LS_AUTH, JSON.stringify(auth));
+
+        if (data.config) {
+          configDates = data.config;
+          localStorage.setItem(LS_CFG, JSON.stringify(configDates));
+        }
+        if (data.logs) {
+          db = data.logs;
+          localStorage.setItem(LS_LOGS, JSON.stringify(db));
+        }
+
+        document.getElementById('loginOverlay').classList.add('login-hidden');
+        document.getElementById('drawerUserTitle').textContent = auth.displayName;
+        setSyncStatus('☁️ Synced', 'var(--green)');
+        renderCountdownsAndSettingsForm();
+        renderAll();
+      } catch (e) {
+        auth = null;
+        errEl.textContent = 'Connection error. Check Web App URL & "Anyone" access.';
+      } finally {
+        btn.textContent = 'Sign In & Pull Sheet Data';
+        btn.disabled = false;
+      }
+    }
+
+    async function syncFromCloud() {
+      if (!auth) return;
+      setSyncStatus('⏳ Syncing...', 'var(--amber)');
+      try {
+        const data = await apiPost({ action: 'loginAndPull' });
+        if (data.ok) {
+          auth.displayName = data.user.displayName || data.user.username;
+          localStorage.setItem(LS_AUTH, JSON.stringify(auth));
+          document.getElementById('drawerUserTitle').textContent = auth.displayName;
+
+          if (data.config) {
+            configDates = data.config;
+            localStorage.setItem(LS_CFG, JSON.stringify(configDates));
+          }
+          if (data.logs) {
+            db = Object.assign({}, db, data.logs);
+            localStorage.setItem(LS_LOGS, JSON.stringify(db));
+          }
+          renderCountdownsAndSettingsForm();
+          renderAll();
+          setSyncStatus('☁️ Synced', 'var(--green)');
+        } else {
+          setSyncStatus('⚠️ Password Changed', 'var(--red)');
+          logout();
+        }
+      } catch (e) {
+        setSyncStatus('📴 Offline', 'var(--amber)');
+      }
+    }
+
+    let pushTimer = null;
+    function saveAndPushCurrentDay() {
+      const dateStr = datePicker.value;
+      const rec = ensureDateRecord(dateStr);
+      const sched = SCHEDULES[rec.mode] || [];
+      let hrs = 0, doneCount = 0, rideDone = false;
+
+      sched.forEach(it => {
+        if (rec.checked && rec.checked[it.id]) {
+          hrs += it.hrs;
+          doneCount++;
+          if (it.type === 'ride') rideDone = true;
+        }
+      });
+
+      rec.studyHours = hrs;
+      rec.completionPct = sched.length ? Math.round((doneCount / sched.length) * 100) : 0;
+      rec.ride = rideDone;
+
+      localStorage.setItem(LS_LOGS, JSON.stringify(db));
+      renderAll();
+
+      if (!auth) return;
+      setSyncStatus('⏳ Saving...', 'var(--amber)');
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(async () => {
+        try {
+          const res = await apiPost({
+            action: 'saveDay',
+            payload: Object.assign({ date: dateStr }, rec)
+          });
+          if (res.ok) {
+            if (res.config) {
+              configDates = res.config;
+              localStorage.setItem(LS_CFG, JSON.stringify(configDates));
+              renderCountdownsAndSettingsForm();
+            }
+            setSyncStatus('☁️ Saved', 'var(--green)');
+          } else {
+            setSyncStatus('⚠️ Sync Err', 'var(--red)');
+          }
+        } catch (e) {
+          setSyncStatus('📴 Saved Locally', 'var(--amber)');
+        }
+      }, 600);
+    }
+
+    function toggleTask(taskId) {
+      const rec = ensureDateRecord(datePicker.value);
+      rec.checked[taskId] = !rec.checked[taskId];
+      saveAndPushCurrentDay();
+    }
+
+    function updateCounter(key, delta) {
+      const rec = ensureDateRecord(datePicker.value);
+      rec.counters[key] = Math.max(0, (rec.counters[key] || 0) + delta);
+      saveAndPushCurrentDay();
+    }
+
+    function daysUntil(dateStr) {
+      if (!dateStr) return '--';
+      const target = new Date(dateStr + 'T00:00:00');
+      if (isNaN(target.getTime())) return '--';
+      const today = new Date(getTodayStr() + 'T00:00:00');
+      const diff = Math.ceil((target - today) / 86400000);
+      return diff >= 0 ? diff + 'd' : 'Done';
+    }
+
+    function renderCountdownsAndSettingsForm() {
+      document.getElementById('cdTargetDays').textContent = daysUntil(configDates.target_date);
+      document.getElementById('cdTargetDate').textContent = configDates.target_date || 'Not Set';
+
+      document.getElementById('cdNotifDays').textContent = daysUntil(configDates.notification_date);
+      document.getElementById('cdNotifDate').textContent = configDates.notification_date || 'Not Set';
+
+      document.getElementById('cdPrelimsDays').textContent = daysUntil(configDates.prelims_date);
+      document.getElementById('cdPrelimsDate').textContent = configDates.prelims_date || 'Not Set';
+
+      document.getElementById('cdMainsDays').textContent = daysUntil(configDates.mains_date);
+      document.getElementById('cdMainsDate').textContent = configDates.mains_date || 'Not Set';
+
+      // Populate Settings form with current Sheet values
+      if (auth) {
+        document.getElementById('cfgUsername').value = auth.username || '';
+        document.getElementById('cfgPassword').value = auth.password || '';
+        document.getElementById('cfgDisplayName').value = auth.displayName || '';
+      }
+      document.getElementById('cfgTargetDate').value = configDates.target_date || '';
+      document.getElementById('cfgNotifDate').value = configDates.notification_date || '';
+      document.getElementById('cfgPrelimsDate').value = configDates.prelims_date || '';
+      document.getElementById('cfgMainsDate').value = configDates.mains_date || '';
+    }
+
+    async function saveSettingsToSheet() {
+      if (!auth) return;
+      const updates = {
+        newUsername: document.getElementById('cfgUsername').value.trim(),
+        newPassword: document.getElementById('cfgPassword').value.trim(),
+        displayName: document.getElementById('cfgDisplayName').value.trim(),
+        target_date: document.getElementById('cfgTargetDate').value,
+        notification_date: document.getElementById('cfgNotifDate').value,
+        prelims_date: document.getElementById('cfgPrelimsDate').value,
+        mains_date: document.getElementById('cfgMainsDate').value
+      };
+
+      setSyncStatus('⏳ Updating Sheet...', 'var(--amber)');
+      try {
+        const res = await apiPost({ action: 'updateSettings', updates });
+        if (res.ok) {
+          auth.username = res.user.username;
+          auth.password = res.user.password;
+          auth.displayName = res.user.displayName;
+          localStorage.setItem(LS_AUTH, JSON.stringify(auth));
+
+          configDates = res.config;
+          localStorage.setItem(LS_CFG, JSON.stringify(configDates));
+
+          document.getElementById('drawerUserTitle').textContent = auth.displayName;
+          renderCountdownsAndSettingsForm();
+          setSyncStatus('☁️ Sheet Updated', 'var(--green)');
+          alert('Settings tab in Google Sheet updated successfully!');
+        } else {
+          alert('Error updating sheet: ' + (res.error || 'Unknown'));
+        }
+      } catch (e) {
+        setSyncStatus('📴 Offline', 'var(--amber)');
+        alert('Could not reach Google Sheet.');
+      }
+    }
+
+    function renderAll() {
+      const dateStr = datePicker.value;
+      const rec = ensureDateRecord(dateStr);
+      modeSelect.value = rec.mode;
+
+      const items = SCHEDULES[rec.mode] || [];
+      const listEl = document.getElementById('taskList');
+      listEl.innerHTML = '';
+
+      let studyDone = 0, studyTarget = 0, completedTasks = 0;
+
+      items.forEach(item => {
+        const isDone = !!(rec.checked && rec.checked[item.id]);
+        if (item.hrs > 0) {
+          studyTarget += item.hrs;
+          if (isDone) studyDone += item.hrs;
+        }
+        if (isDone) completedTasks++;
+
+        const div = document.createElement('div');
+        div.className = 'task-item' + (isDone ? ' done' : '');
+        div.onclick = () => toggleTask(item.id);
+        div.innerHTML = `
+          <div class="checkbox">${isDone ? '✓' : ''}</div>
+          <div class="task-content">
+            <div class="task-meta">
+              <span class="${item.hrs === 0 ? 'tag-habit' : ''}">${item.time}</span>
+              <span>${item.hrs > 0 ? item.hrs + 'h' : 'Anchor'}</span>
+            </div>
+            <div class="task-title">${item.title}</div>
+            <div class="task-desc">${item.desc}</div>
+          </div>
+        `;
+        listEl.appendChild(div);
+      });
+
+      const pct = items.length ? Math.round((completedTasks / items.length) * 100) : 0;
+      document.getElementById('hoursDone').textContent = studyDone.toFixed(2).replace(/\.00$/, '');
+      document.getElementById('hoursTarget').textContent = studyTarget > 0 ? `/ ${studyTarget} hrs studied` : `/ Recovery Mode`;
+      document.getElementById('scorePercent').textContent = `${pct}% Done`;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+
+      document.getElementById('val-mains').textContent = (rec.counters && rec.counters.mains) || 0;
+      document.getElementById('val-pyq').textContent = (rec.counters && rec.counters.pyq) || 0;
+      document.getElementById('val-csat').textContent = (rec.counters && rec.counters.csat) || 0;
+
+      computeLifetimeAndStreak();
+      renderWeeklyView();
+      renderMonthlyView();
+    }
+
+    function computeLifetimeAndStreak() {
+      let totHrs = 0, totMains = 0, totPYQ = 0, totRides = 0;
+      Object.keys(db).forEach(d => {
+        const r = db[d];
+        const sched = SCHEDULES[r.mode] || [];
+        sched.forEach(it => {
+          if (r.checked && r.checked[it.id]) {
+            totHrs += it.hrs;
+            if (it.type === 'ride') totRides++;
+          }
+        });
+        if (r.counters) {
+          totMains += r.counters.mains || 0;
+          totPYQ += r.counters.pyq || 0;
+        }
+      });
+
+      document.getElementById('totHours').textContent = totHrs.toFixed(1);
+      document.getElementById('totMains').textContent = totMains;
+      document.getElementById('totPYQ').textContent = totPYQ;
+      document.getElementById('totRides').textContent = totRides;
+
+      let streak = 0;
+      const today = new Date(getTodayStr() + 'T00:00:00');
+      for (let i = 0; i < 365; i++) {
+        const d = new Date(today.getTime() - i * 86400000);
+        const ds = d.toISOString().split('T')[0];
+        const r = db[ds];
+        const anyDone = r && r.checked && Object.values(r.checked).some(Boolean);
+        if (anyDone) streak++;
+        else if (i > 0) break;
+      }
+      document.getElementById('streakText').textContent = `🔥 ${streak}d Streak`;
+    }
+
+    function renderWeeklyView() {
+      const tbody = document.getElementById('weeklyTableBody');
+      tbody.innerHTML = '';
+      const today = new Date(datePicker.value + 'T00:00:00');
+      let wkHrs = 0, wkPctSum = 0, wkMains = 0, wkPYQ = 0, wkCSAT = 0;
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today.getTime() - i * 86400000);
+        const ds = d.toISOString().split('T')[0];
+        const r = db[ds] || { mode: defaultModeForDate(ds), checked: {}, counters: { mains: 0, pyq: 0, csat: 0 } };
+        const sched = SCHEDULES[r.mode] || [];
+        let h = 0, done = 0;
+        sched.forEach(it => {
+          if (r.checked && r.checked[it.id]) {
+            h += it.hrs;
+            done++;
+          }
+        });
+        const pct = sched.length ? Math.round((done / sched.length) * 100) : 0;
+        const m = (r.counters && r.counters.mains) || 0;
+        const p = (r.counters && r.counters.pyq) || 0;
+        const c = (r.counters && r.counters.csat) || 0;
+
+        wkHrs += h;
+        wkPctSum += pct;
+        wkMains += m;
+        wkPYQ += p;
+        wkCSAT += c;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${ds.slice(5)}</td>
+          <td>${r.mode.toUpperCase()}</td>
+          <td><strong>${h.toFixed(1)}h</strong></td>
+          <td>${pct}%</td>
+          <td>${m} / ${p} / ${c}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      document.getElementById('wkHours').textContent = wkHrs.toFixed(1) + 'h';
+      document.getElementById('wkAvgPct').textContent = Math.round(wkPctSum / 7) + '%';
+      document.getElementById('wkMains').textContent = wkMains;
+      document.getElementById('wkPYQ').textContent = `${wkPYQ} / ${wkCSAT}`;
+    }
+
+    function renderMonthlyView() {
+      const mp = document.getElementById('monthPicker');
+      if (!mp.value) mp.value = getTodayStr().slice(0, 7);
+      const [yr, mo] = mp.value.split('-').map(Number);
+      const daysInMonth = new Date(yr, mo, 0).getDate();
+
+      let moHrs = 0, moActive = 0, moMains = 0, moRides = 0;
+      const grid = document.getElementById('monthCalGrid');
+      grid.innerHTML = '';
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const ds = `${yr}-${String(mo).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const r = db[ds];
+        let h = 0, pct = 0;
+        if (r) {
+          const sched = SCHEDULES[r.mode] || [];
+          let done = 0;
+          sched.forEach(it => {
+            if (r.checked && r.checked[it.id]) {
+              h += it.hrs;
+              done++;
+              if (it.type === 'ride') moRides++;
+            }
+          });
+          pct = sched.length ? Math.round((done / sched.length) * 100) : 0;
+          if (done > 0) moActive++;
+          moHrs += h;
+          moMains += (r.counters && r.counters.mains) || 0;
+        }
+
+        let heatClass = '';
+        if (pct >= 80) heatClass = 'heat-high';
+        else if (pct >= 40) heatClass = 'heat-mid';
+        else if (pct > 0) heatClass = 'heat-low';
+
+        const cell = document.createElement('div');
+        cell.className = `cal-cell ${heatClass}`;
+        cell.innerHTML = `<span>${day}</span><small>${h > 0 ? h.toFixed(1) + 'h' : '-'}</small>`;
+        cell.onclick = () => {
+          datePicker.value = ds;
+          switchView('daily');
+          renderAll();
+        };
+        grid.appendChild(cell);
+      }
+
+      document.getElementById('moHours').textContent = moHrs.toFixed(1) + 'h';
+      document.getElementById('moActiveDays').textContent = moActive + 'd';
+      document.getElementById('moMains').textContent = moMains;
+      document.getElementById('moRides').textContent = moRides;
+    }
+
+    function toggleDrawer(open) {
+      document.getElementById('drawer').classList.toggle('open', open);
+      document.getElementById('drawerBackdrop').classList.toggle('open', open);
+    }
+
+    function switchView(viewName) {
+      ['daily', 'weekly', 'monthly', 'settings'].forEach(v => {
+        document.getElementById('view-' + v).classList.toggle('active', v === viewName);
+        document.getElementById('nav-' + v).classList.toggle('active', v === viewName);
+      });
+      const titles = {
+        daily: 'Daily Command',
+        weekly: 'Weekly Progress',
+        monthly: 'Monthly Progress',
+        settings: 'Sheet Credentials & Dates'
+      };
+      document.getElementById('viewHeaderTitle').textContent = titles[viewName];
+      toggleDrawer(false);
+    }
+
+    function logout() {
+      localStorage.removeItem(LS_AUTH);
+      auth = null;
+      toggleDrawer(false);
+      document.getElementById('loginOverlay').classList.remove('login-hidden');
+    }
+
+    // Initialize
+    datePicker.value = getTodayStr();
+    document.getElementById('monthPicker').value = getTodayStr().slice(0, 7);
+    datePicker.addEventListener('change', renderAll);
+    modeSelect.addEventListener('change', () => {
+      const rec = ensureDateRecord(datePicker.value);
+      rec.mode = modeSelect.value;
+      saveAndPushCurrentDay();
+    });
+
+    if (DEFAULT_SCRIPT_URL) {
+      document.getElementById('loginScriptUrl').value = DEFAULT_SCRIPT_URL;
+    }
+
+    if (auth && auth.scriptUrl && auth.username && auth.password) {
+      document.getElementById('loginOverlay').classList.add('login-hidden');
+      document.getElementById('drawerUserTitle').textContent = auth.displayName || auth.username;
+      renderCountdownsAndSettingsForm();
+      renderAll();
+      syncFromCloud();
+    } else {
+      renderCountdownsAndSettingsForm();
+      renderAll();
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
